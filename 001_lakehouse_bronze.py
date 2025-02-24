@@ -44,7 +44,6 @@ import sys, random, os, json, random, configparser
 from utils import *
 
 USERNAME = os.environ["PROJECT_OWNER"]
-DBNAME = "BNK_MLOPS_HOL_"+USERNAME
 CONNECTION_NAME = "paul-november-aw-dl"
 
 from pyspark import SparkContext
