@@ -43,18 +43,17 @@ from pyspark.sql.types import *
 import sys, random, os, json, random, configparser
 from utils import *
 
-spark = SparkSession \
-    .builder \
-    .appName("BANK TRANSACTIONS GOLD LAYER") \
-    .getOrCreate()
+USERNAME = os.environ["PROJECT_OWNER"]
+DBNAME = "BNK_MLOPS_HOL_"+USERNAME
+CONNECTION_NAME = "paul-november-aw-dl"
 
-config = configparser.ConfigParser()
-config.read('/app/mount/parameters.conf')
-storageLocation=config.get("general","data_lake_name")
-print("Storage Location from Config File: ", storageLocation)
+from pyspark import SparkContext
+SparkContext.setSystemProperty('spark.executor.cores', '2')
+SparkContext.setSystemProperty('spark.executor.memory', '4g')
 
-username = sys.argv[1]
-print("PySpark Runtime Arg: ", sys.argv[1])
+import cml.data_v1 as cmldata
+conn = cmldata.get_connection(CONNECTION_NAME)
+spark = conn.get_spark_session()
 
 
 #---------------------------------------------------
