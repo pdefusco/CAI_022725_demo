@@ -52,7 +52,7 @@ import pyspark.pandas as ps
 
 USERNAME = os.environ["PROJECT_OWNER"]
 DBNAME = "BNK_MLOPS_HOL_"+USERNAME
-CONNECTION_NAME = "paul-november-aw-dl"
+CONNECTION_NAME = "pdefusco-aw-dl"
 
 DATE = date.today()
 EXPERIMENT_NAME = "xgb-cc-fraud-{0}".format(USERNAME)
@@ -62,10 +62,12 @@ mlflow.set_experiment(EXPERIMENT_NAME)
 conn = cmldata.get_connection(CONNECTION_NAME)
 spark = conn.get_spark_session()
 
-df_from_sql = ps.read_table('{0}.CC_TRX_{1}'.format(DBNAME, USERNAME))
+df_from_sql = ps.read_table('spark_catalog.HOL_DB_{0}.GOLD_TABLE_{0}'.format(USERNAME))
 df = df_from_sql.to_pandas()
 
-test_size = 0.3
+df = df.drop(columns=["transaction_currency", "NAME", "EMAIL"])
+
+test_size = 0.2
 X_train, X_test, y_train, y_test = train_test_split(df.drop("fraud_trx", axis=1), df["fraud_trx"], test_size=test_size)
 
 with mlflow.start_run():
