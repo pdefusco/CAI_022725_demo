@@ -46,7 +46,7 @@ from great_expectations.dataset.sparkdf_dataset import SparkDFDataset
 
 USERNAME = os.environ["PROJECT_OWNER"]
 DBNAME = "BNK_MLOPS_HOL_"+USERNAME
-CONNECTION_NAME = "paul-november-aw-dl"
+CONNECTION_NAME = "pdefusco-aw-dl"
 
 from pyspark import SparkContext
 SparkContext.setSystemProperty('spark.executor.cores', '2')
@@ -62,7 +62,7 @@ spark = conn.get_spark_session()
 #---------------------------------------------------
 
 ### TRANSACTIONS FACT TABLE
-branchDf = spark.sql("SELECT * FROM SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0} VERSION AS OF 'ingestion_branch';".format(username))
+branchDf = spark.sql("SELECT * FROM SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0} VERSION AS OF 'ingestion_branch';".format(USERNAME))
 
 ### TRX DF SCHEMA BEFORE CASTING
 branchDf.printSchema()
@@ -83,7 +83,7 @@ geTrxBatchDfValidation = geTrxBatchDf.expect_column_max_to_be_between(column="la
 
 print(f"VALIDATION RESULTS FOR TRANSACTION BATCH DATA:\n{geTrxBatchDfValidation}\n")
 assert geTrxBatchDfValidation.success, \
-    "VALIDATION FOR SALES TABLE UNSUCCESSFUL: FOUND DUPLICATES IN COLUMNS LIST."
+    "VALIDATION FOR SALES TABLE UNSUCCESSFUL: LATITUDE OUT OF RANGE."
 
 
 #---------------------------------------------------
@@ -91,13 +91,13 @@ assert geTrxBatchDfValidation.success, \
 #---------------------------------------------------
 
 ### PRE-MERGE COUNTS BY TRANSACTION TYPE:
-spark.sql("""SELECT COUNT(*) FROM SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0}""".format(username)).show()
+spark.sql("""SELECT COUNT(*) FROM SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0}""".format(USERNAME)).show()
 
 ### APPEND OPERATION
-#branchDf.write.format("iceberg").mode("append").save("SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0}".format(username))
+#branchDf.write.format("iceberg").mode("append").save("SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0}".format(USERNAME))
 
 ### POST-MERGE COUNT:
-#spark.sql("""SELECT COUNT(*) FROM SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0}""".format(username)).show()
+#spark.sql("""SELECT COUNT(*) FROM SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0}""".format(USERNAME)).show()
 
 ### MERGE INGESTION BRANCH INTO MAIN TABLE BRANCH
 
@@ -108,15 +108,15 @@ spark.sql("""SELECT COUNT(*) FROM SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0}""".forma
 #we will use the cherrypick operation to commit the changes to the table which were staged in the 'ing_branch' branch up until now.
 
 # SHOW PAST BRANCH SNAPSHOT ID'S
-spark.sql("SELECT * FROM SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0}.refs;".format(username)).show()
+spark.sql("SELECT * FROM SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0}.refs;".format(USERNAME)).show()
 
 # SAVE THE SNAPSHOT ID CORRESPONDING TO THE CREATED BRANCH
-branchSnapshotId = spark.sql("SELECT snapshot_id FROM SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0}.refs WHERE NAME == 'ingestion_branch';".format(username)).collect()[0][0]
+branchSnapshotId = spark.sql("SELECT snapshot_id FROM SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0}.refs WHERE NAME == 'ingestion_branch';".format(USERNAME)).collect()[0][0]
 
 # USE THE PROCEDURE TO CHERRY-PICK THE SNAPSHOT
 # THIS IMPLICITLY SETS THE CURRENT TABLE STATE TO THE STATE DEFINED BY THE CHOSEN PRIOR SNAPSHOT ID
-spark.sql("CALL spark_catalog.system.cherrypick_snapshot('SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0}',{1})".format(username, branchSnapshotId))
+spark.sql("CALL spark_catalog.system.cherrypick_snapshot('SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0}',{1})".format(USERNAME, branchSnapshotId))
 
 # VALIDATE THE CHANGES
 # THE TABLE ROW COUNT IN THE CURRENT TABLE STATE REFLECTS THE APPEND OPERATION - IT PREVIOSULY ONLY DID BY SELECTING THE BRANCH
-spark.sql("SELECT COUNT(*) FROM SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0};".format(username)).show()
+spark.sql("SELECT COUNT(*) FROM SPARK_CATALOG.HOL_DB_{0}.HIST_TRX_{0};".format(USERNAME)).show()

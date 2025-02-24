@@ -44,7 +44,8 @@ import sys, random, os, json, random, configparser
 from utils import *
 
 USERNAME = os.environ["PROJECT_OWNER"]
-CONNECTION_NAME = "paul-november-aw-dl"
+CONNECTION_NAME = "pdefusco-aw-dl"
+storageLocation = "s3a://pdefusco-buk-26141e5f/data"
 
 from pyspark import SparkContext
 SparkContext.setSystemProperty('spark.executor.cores', '2')
