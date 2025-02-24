@@ -65,7 +65,7 @@ spark = conn.get_spark_session()
 df_from_sql = ps.read_table('spark_catalog.HOL_DB_{0}.GOLD_TABLE_{0}'.format(USERNAME))
 df = df_from_sql.to_pandas()
 
-df = df.drop(columns=["transaction_currency", "NAME", "EMAIL"])
+df = df.drop(columns=["transaction_currency", "NAME", "credit_card_provider"])
 
 test_size = 0.2
 X_train, X_test, y_train, y_test = train_test_split(df.drop("fraud_trx", axis=1), df["fraud_trx"], test_size=test_size)

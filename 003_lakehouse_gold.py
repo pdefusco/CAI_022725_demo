@@ -45,7 +45,7 @@ from utils import *
 
 USERNAME = os.environ["PROJECT_OWNER"]
 DBNAME = "BNK_MLOPS_HOL_"+USERNAME
-CONNECTION_NAME = "paul-november-aw-dl"
+CONNECTION_NAME = "pdefusco-aw-dl"
 
 from pyspark import SparkContext
 SparkContext.setSystemProperty('spark.executor.cores', '2')
@@ -61,13 +61,13 @@ spark = conn.get_spark_session()
 #---------------------------------------------------
 
 # ICEBERG TABLE HISTORY (SHOWS EACH SNAPSHOT AND TIMESTAMP)
-spark.sql("SELECT * FROM spark_catalog.HOL_DB_{0}.HIST_TRX_{0}.history".format(username)).show()
+spark.sql("SELECT * FROM spark_catalog.HOL_DB_{0}.HIST_TRX_{0}.history".format(USERNAME)).show()
 
 # ICEBERG TABLE SNAPSHOTS (USEFUL FOR INCREMENTAL QUERIES AND TIME TRAVEL)
-spark.sql("SELECT * FROM spark_catalog.HOL_DB_{0}.HIST_TRX_{0}.snapshots".format(username)).show()
+spark.sql("SELECT * FROM spark_catalog.HOL_DB_{0}.HIST_TRX_{0}.snapshots".format(USERNAME)).show()
 
 # STORE FIRST AND LAST SNAPSHOT ID'S FROM SNAPSHOTS TABLE
-snapshots_df = spark.sql("SELECT * FROM spark_catalog.HOL_DB_{0}.HIST_TRX_{0}.snapshots;".format(username))
+snapshots_df = spark.sql("SELECT * FROM spark_catalog.HOL_DB_{0}.HIST_TRX_{0}.snapshots;".format(USERNAME))
 
 # SNAPSHOTS
 snapshots_df.show()
@@ -80,7 +80,7 @@ incReadDf = spark.read\
     .format("iceberg")\
     .option("start-snapshot-id", first_snapshot)\
     .option("end-snapshot-id", last_snapshot)\
-    .load("spark_catalog.HOL_DB_{0}.HIST_TRX_{0}".format(username))
+    .load("spark_catalog.HOL_DB_{0}.HIST_TRX_{0}".format(USERNAME))
 
 print("Incremental Report:")
 incReadDf.show()
@@ -91,7 +91,7 @@ incReadDf.show()
 #-----------------------------------------------------
 
 ### LOAD CUSTOMER DATA REFINED
-custDf = spark.sql("SELECT * FROM spark_catalog.HOL_DB_{0}.CUST_TABLE_REFINED_{0}".format(username))
+custDf = spark.sql("SELECT * FROM spark_catalog.HOL_DB_{0}.CUST_TABLE_REFINED_{0}".format(USERNAME))
 
 print("Cust DF Schema: ")
 custDf.printSchema()
@@ -102,8 +102,8 @@ distanceFunc = F.udf(lambda arr: (((arr[2]-arr[0])**2)+((arr[3]-arr[1])**2)**(1/
 distanceDf = joinDf.withColumn("trx_dist_from_home", distanceFunc(F.array("latitude", "longitude",
                                                                             "address_latitude", "address_longitude")))
 
-# SELECT CUSTOMERS WHERE TRANSACTION OCCURRED MORE THAN 100 MILES FROM HOME
-distanceDf = distanceDf.filter(distanceDf.trx_dist_from_home > 50)
+# SELECT CUSTOMERS WHERE TRANSACTION OCCURRED MORE THAN X MILES FROM HOME
+#distanceDf = distanceDf.filter(distanceDf.trx_dist_from_home > 1)
 
 
 #---------------------------------------------------
@@ -112,8 +112,12 @@ distanceDf = distanceDf.filter(distanceDf.trx_dist_from_home > 50)
 
 #distanceDf.show()
 
-gold_cols = ['transaction_amount', 'transaction_currency', 'transaction_type', 'trx_dist_from_home', 'name', 'email', 'bank_country', 'account_no']
+gold_cols = ['bank_account_balance', 'credit_card_balance',
+             'credit_card_provider', 'fraud_trx', 'mortgage_balance', 'primary_loan_balance', 'savings_account_balance',
+             'sec_bank_account_balance', 'sec_savings_account_balance', 'secondary_loan_balance', 'total_est_nworth',
+             'transaction_amount', 'transaction_currency', 'latitude', 'longitude', 'uni_loan_balance', 'trx_dist_from_home',
+             'ADDRESS_LATITUDE', 'ADDRESS_LONGITUDE', 'NAME']
 
-distanceDf.select(*gold_cols).writeTo("spark_catalog.HOL_DB_{0}.GOLD_TABLE_{0}".format(username)).using("iceberg").createOrReplace()
+distanceDf.select(*gold_cols).writeTo("spark_catalog.HOL_DB_{0}.GOLD_TABLE_{0}".format(USERNAME)).using("iceberg").createOrReplace()
 
-#spark.sql("SELECT * FROM spark_catalog.HOL_DB_{0}.GOLD_TABLE_{0}".format(username)).show()
+#spark.sql("SELECT * FROM spark_catalog.HOL_DB_{0}.GOLD_TABLE_{0}".format(USERNAME)).show()
