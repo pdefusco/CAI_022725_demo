@@ -49,7 +49,6 @@ from sklearn.metrics import classification_report
 import cmlapi
 from src.api import ApiUtility
 import cml.data_v1 as cmldata
-from utils import BankDataGen
 import datetime
 
 #---------------------------------------------------
@@ -59,18 +58,7 @@ import datetime
 # SET USER VARIABLES
 USERNAME = os.environ["PROJECT_OWNER"]
 DBNAME = "BNK_MLOPS_HOL_{}".format(USERNAME)
-CONNECTION_NAME = "pdefusco-aw-dl"
-
-# Instantiate BankDataGen class
-dg = BankDataGen(USERNAME, DBNAME, CONNECTION_NAME)
-
-# Create CML Spark Connection
-spark = dg.createSparkConnection()
-
-# Create Banking Transactions DF
-sparkDf = dg.dataGen(spark)
-
-df = sparkDf.toPandas()
+CONNECTION_NAME = "go01-aw-dl"
 
 # You can access all models with API V2
 client = cmlapi.default_client()
@@ -85,15 +73,13 @@ modelName = "FraudCLF-" + USERNAME
 Model_AccessKey = apiUtil.get_latest_deployment_details(model_name=modelName)["model_access_key"]
 Deployment_CRN = apiUtil.get_latest_deployment_details(model_name=modelName)["latest_deployment_crn"]
 
-#{"dataframe_split": {"columns": ["age", "credit_card_balance", "bank_account_balance", "mortgage_balance", "sec_bank_account_balance", "savings_account_balance", "sec_savings_account_balance", "total_est_nworth", "primary_loan_balance", "secondary_loan_balance", "uni_loan_balance", "longitude", "latitude", "transaction_amount"], "data":[[35.5, 20000.5, 3900.5, 14000.5, 2944.5, 3400.5, 12000.5, 29000.5, 1300.5, 15000.5, 10000.5, 2000.5, 90.5, 120.5]]}}
-
 def submitRequest(Model_AccessKey):
     """
     Method to create and send a synthetic request to Time Series Query Model
     """
 
-    record = '{"dataframe_split": {"columns": ["age", "credit_card_balance", "bank_account_balance", "mortgage_balance", "sec_bank_account_balance", "savings_account_balance", "sec_savings_account_balance", "total_est_nworth", "primary_loan_balance", "secondary_loan_balance", "uni_loan_balance", "longitude", "latitude", "transaction_amount"]}}'
-    randomInts = [[random.uniform(1.01,500.01) for i in range(14)]]
+    record = '{"dataframe_split": {"columns": ["bank_account_balance", "credit_card_balance", "mortgage_balance", "primary_loan_balance", "savings_account_balance", "sec_savings_account_balance", "total_est_nworth", "primary_loan_balance", "secondary_loan_balance", "uni_loan_balance", "longitude", "latitude", "transaction_amount", "trx_dist_from_home", "ADDRESS_LATITUDE", "ADDRESS_LONGITUDE"]}}'
+    randomInts = [[random.uniform(1.01,500.01) for i in range(16)]]
     data = json.loads(record)
     data["dataframe_split"]["data"] = randomInts
     response = cdsw.call_model(Model_AccessKey, data)
@@ -102,7 +88,7 @@ def submitRequest(Model_AccessKey):
 
 response_labels_sample = []
 percent_counter = 0
-percent_max = len(df)
+percent_max = 1000
 
 # This will randomly return True for input and increases the likelihood of returning
 # true based on `percent`
