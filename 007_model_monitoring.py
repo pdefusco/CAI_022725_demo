@@ -38,7 +38,12 @@
 #***************************************************************************/
 
 
-import cdsw, time, os
+try:
+    import cml.utils_v1 as utils
+    cdsw = utils._emulate_cdsw()
+except ImportError:
+    import cdsw
+import time, os
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -49,9 +54,6 @@ import sqlite3
 import cmlapi
 from src.api import ApiUtility
 from pandas import json_normalize
-
-
-
 
 # You can access all models with API V2
 client = cmlapi.default_client()
