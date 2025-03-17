@@ -58,7 +58,7 @@ import datetime
 # SET USER VARIABLES
 USERNAME = os.environ["PROJECT_OWNER"]
 DBNAME = "BNK_MLOPS_HOL_{}".format(USERNAME)
-CONNECTION_NAME = "go01-aw-dl"
+CONNECTION_NAME = "pdf-3425-aw-dl"
 
 # You can access all models with API V2
 client = cmlapi.default_client()

@@ -46,7 +46,7 @@ from great_expectations.dataset.sparkdf_dataset import SparkDFDataset
 
 USERNAME = os.environ["PROJECT_OWNER"]
 DBNAME = "BNK_MLOPS_HOL_"+USERNAME
-CONNECTION_NAME = "pdefusco-aw-dl"
+CONNECTION_NAME = "pdf-3425-aw-dl"
 
 from pyspark import SparkContext
 SparkContext.setSystemProperty('spark.executor.cores', '2')

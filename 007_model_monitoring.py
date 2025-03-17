@@ -51,6 +51,8 @@ from src.api import ApiUtility
 from pandas import json_normalize
 
 
+
+
 # You can access all models with API V2
 client = cmlapi.default_client()
 
